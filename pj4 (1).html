@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://kit.fontawesome.com/8910af7fb5.js" crossorigin="anonymous"></script>
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        header {
+            background-color: orange;
+            padding: 3px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        div {
+            margin: 0.5rem;
+        }
+        
+        .newsContainer {
+            display: flex;
+        }
+        
+        .newsItem {
+            font-size: 21px;
+            line-height: 2.1rem;
+        }
+        
+        .imgArticle {
+            width: 30%;
+            margin-right: 1.2rem;
+        }
+        
+        #searchBarBackground {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            visibility: hidden;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            left: 0;
+            font-size: 21px;
+        }
+        
+        #searchBar {
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 1.5rem;
+            width: 72%;
+            height: 10%;
+        }
+        
+        span,
+        button {
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        #hideSearchBar:hover,
+        #showResult:hover,
+        button:hover {
+            font-size: larger;
+        }
+        
+        #load {
+            display: none;
+            font-size: xxx-large;
+            margin-top: 3rem;
+            color: #6262d7;
+            text-align: center;
+        }
+        
+        #newsResult {
+            font-size: xx-large;
+            text-align: center;
+            margin: 6rem 9rem;
+        }
+        
+        img.imgResult {
+            width: 88%;
+        }
+        
+        @media screen and (max-width:1200px) {
+            .newsContainer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .newsItem {
+                font-size: 30px;
+                line-height: 2.1rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                margin: 2.1rem;
+            }
+            .imgArticle {
+                width: 81%;
+            }
+            #newsResult {
+                margin: 3rem 6rem;
+            }
+            h6 {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>my news<span> <i id="showResult" class="fa-solid fa-magnifying-glass"></i> </span></h1>
+    </header>
+
+    <div id="load">
+        <div id="loadingIcon"><i class="fa-solid fa-spinner"></i></div>
+    </div>
+
+    <div id="searchBarBackground">
+        <div id="searchBar">
+            <label for="input">keywords</label>
+            <input type="text" id="input" />
+            <label for="timeFrom">from</label>
+            <input type="date" id="timeFrom" />
+            <label for="timeTo">to</label>
+            <input type="date" id="timeTo" />
+            <button id="searchResult">search</button>
+            <span id="hideSearchBar">X</span>
+        </div>
+    </div>
+
+    <div id="contentRender"></div>
+    <div id="contentResult"></div>
+
+    <script>
+        var apiKey = "855bd8466c08b7197568f28b5a66de24";
+        //21a69bde943f15a671237aaeb665d9ff
+        //09f4ce1805c6fc144903d11acacc7f13
+        fetch(`https://gnews.io/api/v4/top-headlines?&token=${apiKey}&max=5`)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                let output = "";
+
+                for (let i = 0; i < data.articles.length; i++) {
+                    const topNews = data.articles[i];
+
+                    output += `    
+                    <div class="newsContainer">
+                        <img src="${topNews.image}" class="imgArticle">
+                        <div class="newsItem">
+                            <a href="${topNews.url}" class="title">${topNews.title}</a>
+                            <h6 class="date">${topNews.publishedAt}</h6>
+                            <p class="description">${topNews.description}</p>
+                        </div>
+                    </div>`;
+                }
+
+                document.getElementById("contentRender").innerHTML = output;
+            });
+
+        //
+
+        const show = document.getElementById("showResult");
+        const search = document.getElementById("searchResult");
+        const hide = document.getElementById("hideSearchBar");
+
+        show.addEventListener("click", function(e) {
+            e.preventDefault();
+            document.getElementById("searchBarBackground").style.visibility = "visible";
+        });
+
+        hide.addEventListener("click", function(e) {
+            e.preventDefault();
+            document.getElementById("searchBarBackground").style.visibility = "hidden";
+        });
+
+
+        search.addEventListener("click", searching)
+
+        function searching(e) {
+            e.preventDefault();
+
+            document.getElementById('load').style.display = 'block'
+            document.getElementById('contentRender').style.display = 'none'
+            document.getElementById('searchBarBackground').style.visibility = 'visible'
+
+            const keyword = document.getElementById("input").value;
+            const timeFrom = document.getElementById("timeFrom").value;
+            const timeTo = document.getElementById("timeTo").value;
+
+            fetch(`https://gnews.io/api/v4/search?q=${keyword}&lang=en&from=${timeFrom}T00:00:00Z&to=${timeTo}T00:00:00Z&token=${apiKey}&max=5`)
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    let output = "";
+
+                    for (let i = 0; i < data.articles.length; i++) {
+                        const searchedNews = data.articles[i];
+                        output += `
+                        <div id="newsResult">
+                            <h3><a target="_blank" href="${searchedNews.url}">${searchedNews.title}</a></h3>
+                            <img src="${searchedNews.image}" class="imgResult"/>
+                            <p class="description">${searchedNews.description}</p>
+                            <h6>${searchedNews.content}</h6>
+                        </div>`;
+                    }
+
+                    if (keyword !== '') {
+                        document.getElementById("contentResult").innerHTML = output;
+                    } else {
+                        document.getElementById("contentResult").innerHTML = 'enter something';
+                    }
+                })
+
+            document.getElementById('load').style.display = 'none'
+            document.getElementById('searchBarBackground').style.visibility = 'hidden'
+
+        }
+    </script>
+</body>
+
+</html>
